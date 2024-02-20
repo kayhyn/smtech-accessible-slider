@@ -1,2 +1,1 @@
-# smtech-accessible-slider
-Accessible slider plugin
+# slider-plugin
