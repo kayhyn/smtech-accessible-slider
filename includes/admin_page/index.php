@@ -3,8 +3,30 @@
  * Plugin admin page
  * Add, remove, and customise sliders here 
 */
+$sliders = get_option('smtech_slider_arr');
 
-$sliders = array("slider1","slider2","slider3");
+if( isset($_GET["newSlider"]) ) {
+  $sliders[] = array(
+    "name" => "New Slider",
+    "dynamic" => true,
+    "stylesheet" => "default.css",
+  );
+  update_option('smtech_slider_arr', $sliders);
+  
+} else if(isset($_GET["delSlider"])) {
+  // this code is not idempotent - there should ideally be a UUID or something
+  unset($sliders[$_GET["delSlider"]]);
+  update_option('smtech_slider_arr', $sliders);
+} else if(isset($_GET["updateSlider"])) {
+  $sliders[$_POST["sliderId"]] = array(
+    "name" => $_POST["sliderName"],
+    "dynamic" => $_POST["sliderContent"],
+    "stylesheet" => $_POST["sliderStyle"],
+  );
+  update_option('smtech_slider_arr', $sliders);
+}
+
+
 
 ?>
 
@@ -25,18 +47,22 @@ $sliders = array("slider1","slider2","slider3");
   }
   
 
-  document.getElementById(TabName).style.display = "block";
+  
   try {
+    document.getElementById(TabName).style.display = "block";
     evt.currentTarget.className += " active";
   } catch {
-    document.getElementById("tabselector").firstElementChild.className += " active";
+    /* TODO: return to updated slider */
+    Array.from(document.getElementsByClassName("tabcontent")).at(-1).style.display = "block";
+    document.getElementById("tabselector").lastElementChild.className += " active";
   }
 }
 window.onload = function(){
-  openTab(null,'slider1')
+  openTab(null,null)
   }
 function confirmDialog(s) {
   document.getElementById("delete-target").innerHTML = s;
+  document.getElementById("delete-modal-confirm").href="?page=test-plugin&delSlider="+s;
   document.getElementById("delete-modal-cancel").addEventListener("click",()=>{
     document.getElementById("delete-modal").close();
   });
@@ -47,7 +73,7 @@ function confirmDialog(s) {
 <dialog class="warning-modal" id="delete-modal">
   <p>Are you sure you want to permanently delete this slider?</p>
   <p class="danger">There is no going back.</p>
-  <button class="btn btn-danger">Yes, delete <span id="delete-target"></span>.</button> <button class="btn" id="delete-modal-cancel" autofocus>Cancel</button>
+  <a id="delete-modal-confirm"><button class="btn btn-danger">Yes, delete <span id="delete-target"></span>.</button></a> <button class="btn" id="delete-modal-cancel" autofocus>Cancel</button>
 </dialog>
 
 <div>
@@ -68,28 +94,40 @@ if(!$sliders) {
 ?>
 <div class="tab" id="tabselector">
 <?php
-  foreach($sliders as $s) { ?>
-    <button class="tablinks" onclick="openTab(event, '<?=$s?>')"><?=$s?></button>
+  foreach($sliders as $i => $s) { ?>
+    <button class="tablinks" onclick="openTab(event, 'slider_<?=$i?>')"><?=$s["name"]?></button>
 <?php 
   } ?>
 </div>
 
 <?php
 /* loop through sliders and put their settings onto the page */
-    foreach($sliders as $s) { ?>
-    <!-- Tab content -->
-    <div id="<?=$s?>" class="tabcontent">
+    foreach($sliders as $i => $s) { ?>
+    <div id="slider_<?=$i?>" class="tabcontent">
   <h3>Settings</h3>
-  <p>ABC.</p>
+  <form action="?page=test-plugin&updateSlider=true" method="post">
+    <input type="hidden" name="sliderId" value="<?=$i?>">
+    <label for="slider<?=$i?>-name">Name: </label><br>
+    <input type=text" id="slider<?=$i?>-name" name="sliderName" value="<?=$s["name"]?>"><br><br>
+    <label for="slider<?=$i?>-stylesheet">Stylesheet: </label><br>
+    <input type=text" id="slider<?=$i?>-stylesheet" name="sliderStyle" value="<?=$s["stylesheet"]?>"><br><br>
+    Slider loads content:<br>
+    <input type="radio" id="slider<?=$i?>-dynamic" name="sliderContent" value=1 <?=$s["dynamic"]?"checked":""?> ><label for="slider<?=$i?>-dynamic">Dynamically</label><br>
+    <input type="radio" id="slider<?=$i?>-static" name="sliderContent" value=0 <?=!$s["dynamic"]?"checked":""?> ><label for="slider<?=$i?>-dynamic">Statically</label><br>
+    <br>
+
+
+    <input type="submit" class="btn btn-submit"></button>
+  </form>
   <h3>Danger zone</h3>
   <p>
-    <a class="danger" href="#" onclick="confirmDialog('<?=$s?>')">Delete this slider</a>
+    <a class="danger" href="#" onclick="confirmDialog('<?=$i?>')">Delete this slider</a>
   </p>
 </div>
 
 <?php }
 } ?>
-<button>Add new slider</button>
+<a href="?page=test-plugin&newSlider=true"?><button>Add new slider</button></a>
 
 
 

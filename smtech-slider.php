@@ -44,6 +44,7 @@ define( 'SMTECH_SLIDER_VERSION', '1.0.0' );
 function activate_smtech_slider() {
 	require_once plugin_dir_path( __FILE__ ) . 'includes/class-smtech-slider-activator.php';
 	Smtech_Slider_Activator::activate();
+	add_option('smtech_slider_arr',array());
 }
 
 /**
