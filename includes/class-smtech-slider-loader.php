@@ -130,7 +130,15 @@ class Smtech_Slider_Loader {
 		}
 
 		function test_init() {
-			require_once("admin_page.php");
+			require_once("admin_page/index.php");
+		}
+
+		// Register shortcode
+		add_shortcode('accessible-slider','test_display');
+
+		function test_display() {
+			require_once("plugin_main.php");
+			return display_slider();
 		}
 
 	}
